@@ -5,6 +5,7 @@
 #include <map>
 #include <sstream>
 #include <queue>
+#include <set>
 
 using namespace std;
 
@@ -42,15 +43,8 @@ int calculateTimeDifference(const string& departuretime, const string& arrivalti
     int totalminutestrain1 = hourtrain1 * 60 + minutetrain1 + sectrain1 / 60;
     int totalminutestrain2 = hourtrain2 * 60 + minutetrain2 + sectrain2 / 60;
 
-    int timediff;
-    if (totalminutestrain2 >= totalminutestrain1) {
-        timediff = totalminutestrain2 - totalminutestrain1;
-    }
-    else {
-        timediff = (24 * 60 - totalminutestrain1) + totalminutestrain2;
-    }
-
-    return timediff;
+    if (totalminutestrain2 >= totalminutestrain1) return totalminutestrain2 - totalminutestrain1;
+    return (24 * 60 - totalminutestrain1) + totalminutestrain2;
 }
 
 struct Route {
@@ -58,6 +52,9 @@ struct Route {
     int totalCost;
     int totalTime;
 };
+
+const string cst = "-1";
+const int cst1 = -1;
 
 Route findBestRoute(const vector<vector<string>>& minCosts, const vector<vector<int>>& timeDifferences, bool minimizeCost) {
     int numStations = minCosts.size();
@@ -81,7 +78,7 @@ Route findBestRoute(const vector<vector<string>>& minCosts, const vector<vector<
             int fromStation = stationsToVisit[i];
             int toStation = stationsToVisit[i + 1];
 
-            if (minCosts[fromStation][toStation] == "-1" || timeDifferences[fromStation][toStation] == -1) {
+            if (minCosts[fromStation][toStation] == cst || timeDifferences[fromStation][toStation] == cst1) {
                 validRoute = false;
                 break;
             }
@@ -90,21 +87,20 @@ Route findBestRoute(const vector<vector<string>>& minCosts, const vector<vector<
             totalTime += timeDifferences[fromStation][toStation];
         }
 
-        if (validRoute) {
-            if ((minimizeCost && totalCost < bestRoute.totalCost) || (!minimizeCost && totalTime < bestRoute.totalTime)) {
-                bestRoute.stations = stationsToVisit;
-                bestRoute.totalCost = totalCost;
-                bestRoute.totalTime = totalTime;
-            }
+        if (!validRoute) continue;
+        if ((minimizeCost && totalCost < bestRoute.totalCost) || (!minimizeCost && totalTime < bestRoute.totalTime)) {
+            bestRoute.stations = stationsToVisit;
+            bestRoute.totalCost = totalCost;
+            bestRoute.totalTime = totalTime;
         }
+        
     } while (next_permutation(stationsToVisit.begin(), stationsToVisit.end()));
 
     return bestRoute;
 }
 
 int main() {
-    ifstream ip("D:/ХПИ/3 semestr/DL/test_task_data.csv");
-    setlocale(LC_CTYPE, "ukr");
+    ifstream ip("test_task_data.csv"); // Предполагается, что файл находится в той же директории
     if (!ip.is_open()) {
         cerr << "ERROR: File Open" << '\n';
         return 1;
@@ -118,6 +114,7 @@ int main() {
     string cost;
     string departuretime;
     string arrivaltime;
+    set<string> uniqueStations;
 
     while (ip.good()) {
         getline(ip, numberoftrain, ';');
@@ -134,16 +131,18 @@ int main() {
         route.cost = cost;
         route.departuretime = departuretime;
         route.arrivaltime = arrivaltime;
+        uniqueStations.insert(departurestation);
+        uniqueStations.insert(arrivalstation);
 
         graph[departurestation].push_back(route);
     }
 
     ip.close();
 
-    vector<string> stations = { "1902", "1909", "1921", "1929", "1937", "1981" };
+    vector<string> stations(uniqueStations.begin(), uniqueStations.end());
     int num_stations = stations.size();
 
-    vector<vector<string>> min_costs(num_stations, vector<string>(num_stations, "-1"));
+    vector<vector<string>> min_costs(num_stations, vector<string>(num_stations, cst));
 
     for (int i = 0; i < num_stations; i++) {
         for (int j = 0; j < num_stations; j++) {
@@ -151,11 +150,11 @@ int main() {
                 string from_station = stations[i];
                 string to_station = stations[j];
 
-                string min_cost = "-1";
+                string min_cost = cst;
 
                 for (const RouteInfo& route : graph[from_station]) {
                     if (route.arrivalstation == to_station) {
-                        if (min_cost == "-1" || route.cost < min_cost) {
+                        if (min_cost == cst || route.cost < min_cost) {
                             min_cost = route.cost;
                         }
                     }
@@ -166,7 +165,7 @@ int main() {
         }
     }
 
-    vector<vector<int>> timeDifferences(num_stations, vector<int>(num_stations, -1));
+    vector<vector<int>> timeDifferences(num_stations, vector<int>(num_stations, cst1));
 
     for (int i = 0; i < num_stations; i++) {
         for (int j = 0; j < num_stations; j++) {
