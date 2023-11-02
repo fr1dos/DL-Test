@@ -100,7 +100,7 @@ Route findBestRoute(const vector<vector<string>>& minCosts, const vector<vector<
 }
 
 int main() {
-    ifstream ip("test_task_data.csv"); // Предполагается, что файл находится в той же директории
+    ifstream ip("test_task_data.csv");
     if (!ip.is_open()) {
         cerr << "ERROR: File Open" << '\n';
         return 1;
