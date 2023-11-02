@@ -132,8 +132,6 @@ int main() {
         route.departuretime = departuretime;
         route.arrivaltime = arrivaltime;
         uniqueStations.insert(departurestation);
-        uniqueStations.insert(arrivalstation);
-
         graph[departurestation].push_back(route);
     }
 
@@ -141,6 +139,7 @@ int main() {
 
     vector<string> stations(uniqueStations.begin(), uniqueStations.end());
     int num_stations = stations.size();
+    
 
     vector<vector<string>> min_costs(num_stations, vector<string>(num_stations, cst));
 
